@@ -1,0 +1,181 @@
+{
+  "name": "electron-fiddle",
+  "displayName": "Electron Fiddle",
+  "description": "Electron Fiddle in your VS Code!",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "colors": [
+      {
+        "id": "electronfiddle.electronInstalled",
+        "description": "Color for installed electron.",
+        "defaults": {
+          "dark": "#090",
+          "light": "#090",
+          "highContrast": "#090"
+        }
+      },
+      {
+        "id": "electronfiddle.electronNotInstall",
+        "description": "Color for not installed electron.",
+        "defaults": {
+          "dark": "#999",
+          "light": "#999",
+          "highContrast": "#999"
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "electron-fiddle.helloWorld",
+        "title": "Hello World",
+        "category": "Electron Fiddle"
+      },
+      {
+        "command": "electron-fiddle.publish",
+        "title": "Publish",
+        "category": "Electron Fiddle"
+      },
+      {
+        "command": "electron-fiddle.updateFiddle",
+        "title": "Update Fiddle",
+        "category": "Electron Fiddle"
+      },
+      {
+        "command": "electron-fiddle.deleteFiddle",
+        "title": "Delete Fiddle",
+        "category": "Electron Fiddle"
+      },
+      {
+        "command": "electron-fiddle.importFromGist",
+        "title": "$(gist) Import from Gist",
+        "category": "Electron Fiddle"
+      },
+      {
+        "command": "electron-fiddle.installActiveElectron",
+        "title": "Install Current Active Electron",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "electron-fiddle.installElectron",
+        "title": "Install Electron Version...",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "electron-fiddle.installAllElectron",
+        "title": "Install All Electron",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "electron-fiddle.uninstallElectron",
+        "title": "Uninstall Electron Version...",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "electron-fiddle.refreshElectronVersion",
+        "title": "Refresh Electron Versions",
+        "icon": "$(sync)"
+      }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "explorer",
+        "contents": "In order to use Electron Fiddle, you can open a folder or import from a Git or GitHub Gist URL.\n[Open Fiddle](command:vscode.openFolder)\n[Import Fiddle](command:electron-fiddle.helloWorld)\nTo learn more about how to use Electron Fiddle extension, [read our docs](https://aka.ms/vscode-scm)."
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "electron-fiddle",
+          "title": "Electron Fiddle",
+          "icon": "resources/icons/electron-fiddle.png"
+        }
+      ]
+    },
+    "views": {
+      "electron-fiddle": [
+        {
+          "id": "electron-version-installed",
+          "contextualTitle": "Installed Electron Version",
+          "name": "Installed"
+        },
+        {
+          "id": "electron-version-stable",
+          "contextualTitle": "Stable Electron Version",
+          "name": "Stable"
+        },
+        {
+          "id": "electron-version-beta",
+          "contextualTitle": "Beta Electron Version",
+          "name": "Beta"
+        },
+        {
+          "id": "electron-version-nightly",
+          "contextualTitle": "Nightly Electron Version",
+          "name": "Nightly"
+        },
+        {
+          "id": "electron-version-obsolete",
+          "contextualTitle": "Obsolete Electron Version",
+          "name": "Obsolete",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "electron-fiddle.installAllElectron",
+          "when": "view =~ /^electron-version/",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-fiddle.refreshElectronVersion",
+          "when": "view =~ /^electron-version/",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "electron-fiddle.uninstallElectron",
+          "when": "view =~ /^electron-version/ && viewItem == electron-installed",
+          "group": "inline"
+        },
+        {
+          "command": "electron-fiddle.installElectron",
+          "when": "view =~ /^electron-version/ && viewItem == electron",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.87.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vscode/test-cli": "^0.0.6",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@electron/fiddle-core": "^1.3.3"
+  }
+}
