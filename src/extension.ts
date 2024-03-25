@@ -6,6 +6,7 @@ import { Manager } from './electron-manager/ElectronManager';
 import path from 'path';
 
 let gistStatus: vscode.StatusBarItem;
+let activeElectronStatus: vscode.StatusBarItem;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -30,6 +31,11 @@ export function activate(context: vscode.ExtensionContext) {
 	gistStatus.command = 'electron-fiddle.helloWorld';
 	gistStatus.show();
 	
+	activeElectronStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+	activeElectronStatus.text = '$(rocket) Electron 12.0.0';
+	activeElectronStatus.command = 'electron-fiddle.setActiveElectron';
+	activeElectronStatus.show();
+
 	const importGist = (source: string) => {
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
@@ -174,10 +180,62 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			});
 		}),
+		vscode.commands.registerCommand('electron-fiddle.setActiveElectron', async (ver?: string) => {
+			if (!ver) {
+				const versions = await manager.getFilteredVersions();
+				const res = await vscode.window.showQuickPick(Object.values(versions).map((v) => ({
+					label: `$(${v.downloaded ? 'package' : 'cloud-download'}) ${v.semver.toString()}`,
+					description: v.state.toString(),
+					version: v.semver.toString(),
+				})), {
+					placeHolder: 'Select Active Electron Version',
+					title: 'Active Electron Version',
+				});
+				if (!res) {
+					return;
+				}
+				ver = res.version;
+			}
+		}),
+		vscode.commands.registerCommand('electron-fiddle.bisectFiddle', async (earliest?: string, latest?: string) => {
+			if (!earliest || !latest) {
+				const versions = await manager.getFilteredVersions();
+				const res = await vscode.window.showQuickPick(Object.values(versions).map((v) => ({
+					label: `$(${v.downloaded ? 'package' : 'cloud-download'}) ${v.semver.toString()}`,
+					description: v.state.toString(),
+					version: v.semver.toString(),
+				})), {
+					placeHolder: 'Select Earliest Electron Version',
+					title: 'Start a bisect session',
+				});
+				if (!res) {
+					return;
+				}
+				earliest = res.version;
+				const res2 = await vscode.window.showQuickPick(Object.values(versions).map((v) => ({
+					label: `$(${v.downloaded ? 'package' : 'cloud-download'}) ${v.semver.toString()}`,
+					description: v.state.toString(),
+					version: v.semver.toString(),
+				})), {
+					placeHolder: 'Select Latest Electron Version',
+					title: `Start a bisect session (from ${earliest})`,
+				});
+				if (!res2) {
+					return;
+				}
+				latest = res2.version;
+				// Confirm yes/no
+				const confirm = await vscode.window.showQuickPick([
+					{ label: '$(check) Yes', description: 'Start bisecting', confirm: true },
+					{ label: '$(x) No', description: 'Cancel bisecting', confirm: false },
+				], {
+					placeHolder: `Start bisecting between ${earliest} and ${latest}?`,
+					title: 'Start a bisect session',
+				});
+			}
+		}),
 	]);
 	let hw = vscode.commands.registerCommand('electron-fiddle.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-
 		// Display a message box to the user
 		vscode.window.showQuickPick([
 			{

@@ -1,65 +1,60 @@
 import type { SemVer } from '@electron/fiddle-core';
-import { InstallState } from '@electron/fiddle-core';
 import * as vscode from 'vscode';
-import { ElectronVersionState, Manager } from './ElectronManager';
-
-export enum ElectronVersionChannel {
-    Installed = 'installed',
-    Stable = 'Stable',
-    Beta = 'Beta',
-    Nightly = 'Nightly',
-    Obsolete = 'Obsolete',
-}
-
-const channelFilter: {[channel: string]: (data: ElectronVersionState) => boolean} = {
-    [ElectronVersionChannel.Installed]: ({ installed }) => installed,
-    [ElectronVersionChannel.Stable]: ({ semver: x }) => x.prerelease.length === 0 && x.compare('27.0.0') >= 0,
-    [ElectronVersionChannel.Beta]: ({ semver: x }) => x.prerelease.includes('beta') && x.compare('27.0.0') >= 0,
-    [ElectronVersionChannel.Nightly]: ({ semver: x }) => x.prerelease.includes('nightly') && x.compare('27.0.0') >= 0,
-    [ElectronVersionChannel.Obsolete]: ({ semver: x }) => x.compare('27.0.0') === -1,
-};
+import { ElectronVersionChannel, ElectronVersionState, Manager } from './ElectronManager';
 
 export class ElectronManagerTreeView {
-    private readonly treeView: {[channel: string]: vscode.TreeView<ElectronManagerItem>} = {};
+    private treeView: vscode.TreeView<ElectronManagerItem>;
+    readonly provider: ElectronManagerTreeDataProvider;
+
     constructor(context: vscode.ExtensionContext) {
-        for (const channel of Object.values(ElectronVersionChannel)) {
-            this.treeView[channel] = vscode.window.createTreeView(
-                `electron-version-${channel.toLowerCase()}`,
-                {
-                    treeDataProvider: new ElectronManagerTreeDataProvider(channel),
-                }
-            );
-            context.subscriptions.push(this.treeView[channel]);
-        }
+        this.provider = new ElectronManagerTreeDataProvider();
+        const manager = Manager.getInstance();
+        manager.installer.on('state-change', () => this.provider.refresh());
+
+        this.treeView = vscode.window.createTreeView(
+            'electron-manager',
+            {
+                treeDataProvider: this.provider,
+            }
+        );
+        
+        const setChannelFilter = (channel: string, toggle: boolean) => {
+            context.workspaceState.update(`electron-fiddle:is${channel}ElectronVersion`, toggle);
+            this.provider.refresh();
+            manager.toggleChannel(channel as ElectronVersionChannel, toggle);
+            vscode.commands.executeCommand('setContext', `electron-fiddle:is${channel}ElectronVersion`, toggle);
+        };
+        const channel = ['NotDownloaded', 'Stable', 'Beta', 'Nightly', 'Obsolete'];
+        const toggle = ['show', 'hide'];
+        context.subscriptions.push(...channel.flatMap(c => toggle.map(t =>
+            vscode.commands.registerCommand(
+                `electron-fiddle.${t}${c}ElectronVersion`,
+                () => setChannelFilter(c, !(t === 'show'))
+            )
+        )));
+        channel.forEach(c => setChannelFilter(c, context.workspaceState.get(`electron-fiddle:is${c}ElectronVersion`, true)));
+
+        context.subscriptions.push(this.treeView);
     }
 }
 
 class ElectronManagerTreeDataProvider implements vscode.TreeDataProvider<ElectronManagerItem> {
-    private channel: ElectronVersionChannel;
-
-    private _onDidChangeTreeData = new vscode.EventEmitter<ElectronManagerItem | void>();
-    readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
-
-    constructor(channel: ElectronVersionChannel = ElectronVersionChannel.Stable) {
-        this.channel = channel;
-        const installer = Manager.getInstance().installer;
-        installer.on('state-change', (version: string, _: InstallState) => {
-            this._onDidChangeTreeData.fire();
-        });
+    private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
+  
+    refresh(): void {
+      this._onDidChangeTreeData.fire();
     }
-
     getTreeItem(element: ElectronManagerItem): vscode.TreeItem {
         return element;
     }
-
     getChildren(element?: ElectronManagerItem): Thenable<ElectronManagerItem[]> {
         const manager = Manager.getInstance();
-        return manager.loadVersions().then(ver => {
+        return manager.getFilteredVersions().then(ver => {
             return Promise.resolve(Object.values(ver)
-                .filter(channelFilter[this.channel])
                 .map(v => new ElectronManagerItem(
                     v.semver.toString(),
-                    v.installed,
+                    v.downloaded,
                 ))
             );
         }).catch(() => {

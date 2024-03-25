@@ -69,7 +69,7 @@
         "icon": "$(cloud-download)"
       },
       {
-        "command": "electron-fiddle.installAllElectron",
+        "command": "electron-fiddle.downloadAllElectron",
         "title": "Install All Electron",
         "icon": "$(cloud-download)"
       },
@@ -79,9 +79,82 @@
         "icon": "$(trash)"
       },
       {
-        "command": "electron-fiddle.refreshElectronVersion",
-        "title": "Refresh Electron Versions",
+        "command": "electron-fiddle.setActiveElectron",
+        "title": "Set Active Electron Version",
+        "icon": "$(check)"
+      },
+      {
+        "command": "electron-fiddle.refreshElectronVersionList",
+        "title": "Refresh Electron Versions List",
         "icon": "$(sync)"
+      },
+      {
+        "command": "electron-fiddle.deleteAllElectron",
+        "title": "Delete All Electron",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "electron-fiddle.addLocalElectron",
+        "title": "Add Local Electron Version...",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "electron-fiddle.showStableElectronVersion",
+        "title": "✓ Stable"
+      },
+      {
+        "command": "electron-fiddle.hideStableElectronVersion",
+        "title": "Stable"
+      },
+      {
+        "command": "electron-fiddle.showBetaElectronVersion",
+        "title": "✓ Beta"
+      },
+      {
+        "command": "electron-fiddle.hideBetaElectronVersion",
+        "title": "Beta"
+      },
+      {
+        "command": "electron-fiddle.showNightlyElectronVersion",
+        "title": "✓ Nightly"
+      },
+      {
+        "command": "electron-fiddle.hideNightlyElectronVersion",
+        "title": "Nightly"
+      },
+      {
+        "command": "electron-fiddle.showObsoleteElectronVersion",
+        "title": "✓ Obsolete"
+      },
+      {
+        "command": "electron-fiddle.hideObsoleteElectronVersion",
+        "title": "Obsolete"
+      },
+      {
+        "command": "electron-fiddle.showNotDownloadedElectronVersion",
+        "title": "✓ Not Downloaded"
+      },
+      {
+        "command": "electron-fiddle.hideNotDownloadedElectronVersion",
+        "title": "Not Downloaded"
+      },
+      {
+        "command": "electron-fiddle.runFiddle",
+        "title": "Run Fiddle",
+        "category": "Electron Fiddle",
+        "icon": "$(play)"
+      },
+      {
+        "command": "electron-fiddle.debugFiddle",
+        "title": "Debug Fiddle",
+        "category": "Electron Fiddle",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "electron-fiddle.bisectFiddle",
+        "title": "Bisect Fiddle",
+        "category": "Electron Fiddle",
+        "icon": "$(git-branch)"
       }
     ],
     "viewsWelcome": [
@@ -102,55 +175,108 @@
     "views": {
       "electron-fiddle": [
         {
-          "id": "electron-version-installed",
-          "contextualTitle": "Installed Electron Version",
-          "name": "Installed"
-        },
-        {
-          "id": "electron-version-stable",
-          "contextualTitle": "Stable Electron Version",
-          "name": "Stable"
-        },
-        {
-          "id": "electron-version-beta",
-          "contextualTitle": "Beta Electron Version",
-          "name": "Beta"
-        },
-        {
-          "id": "electron-version-nightly",
-          "contextualTitle": "Nightly Electron Version",
-          "name": "Nightly"
-        },
-        {
-          "id": "electron-version-obsolete",
-          "contextualTitle": "Obsolete Electron Version",
-          "name": "Obsolete",
-          "visibility": "collapsed"
+          "id": "electron-manager",
+          "name": "Electron Version Manager",
+          "contextualTitle": "Electron Versions"
         }
       ]
     },
     "menus": {
-      "view/title": [
+      "editor/title/run": [
         {
-          "command": "electron-fiddle.installAllElectron",
-          "when": "view =~ /^electron-version/",
-          "group": "navigation"
+          "command": "electron-fiddle.runFiddle",
+          "group": "navigation@1"
         },
         {
-          "command": "electron-fiddle.refreshElectronVersion",
-          "when": "view =~ /^electron-version/",
-          "group": "navigation"
+          "command": "electron-fiddle.debugFiddle",
+          "group": "navigation@2"
+        },
+        {
+          "command": "electron-fiddle.bisectFiddle",
+          "group": "navigation@3"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "electron-fiddle.addLocalElectron",
+          "when": "view == electron-manager",
+          "group": "navigation@4"
+        },
+        {
+          "command": "electron-fiddle.deleteAllElectron",
+          "when": "view == electron-manager",
+          "group": "navigation@3"
+        },
+        {
+          "command": "electron-fiddle.downloadAllElectron",
+          "when": "view == electron-manager",
+          "group": "navigation@2"
+        },
+        {
+          "command": "electron-fiddle.refreshElectronVersionList",
+          "when": "view == electron-manager",
+          "group": "navigation@1"
+        },
+        {
+          "command": "electron-fiddle.showStableElectronVersion",
+          "when": "view == electron-manager && electron-fiddle:isStableElectronVersion",
+          "group": "channel@1"
+        },
+        {
+          "command": "electron-fiddle.showBetaElectronVersion",
+          "when": "view == electron-manager && electron-fiddle:isBetaElectronVersion",
+          "group": "channel@2"
+        },
+        {
+          "command": "electron-fiddle.showNightlyElectronVersion",
+          "when": "view == electron-manager && electron-fiddle:isNightlyElectronVersion",
+          "group": "channel@3"
+        },
+        {
+          "command": "electron-fiddle.showObsoleteElectronVersion",
+          "when": "view == electron-manager && electron-fiddle:isObsoleteElectronVersion",
+          "group": "channel@4"
+        },
+        {
+          "command": "electron-fiddle.showNotDownloadedElectronVersion",
+          "when": "view == electron-manager && electron-fiddle:isNotDownloadedElectronVersion",
+          "group": "filter@1"
+        },
+        {
+          "command": "electron-fiddle.hideStableElectronVersion",
+          "when": "view == electron-manager && !electron-fiddle:isStableElectronVersion",
+          "group": "channel@1"
+        },
+        {
+          "command": "electron-fiddle.hideBetaElectronVersion",
+          "when": "view == electron-manager && !electron-fiddle:isBetaElectronVersion",
+          "group": "channel@2"
+        },
+        {
+          "command": "electron-fiddle.hideNightlyElectronVersion",
+          "when": "view == electron-manager && !electron-fiddle:isNightlyElectronVersion",
+          "group": "channel@3"
+        },
+        {
+          "command": "electron-fiddle.hideObsoleteElectronVersion",
+          "when": "view == electron-manager && !electron-fiddle:isObsoleteElectronVersion",
+          "group": "channel@4"
+        },
+        {
+          "command": "electron-fiddle.hideNotDownloadedElectronVersion",
+          "when": "view == electron-manager && !electron-fiddle:isNotDownloadedElectronVersion",
+          "group": "filter@1"
         }
       ],
       "view/item/context": [
         {
           "command": "electron-fiddle.uninstallElectron",
-          "when": "view =~ /^electron-version/ && viewItem == electron-installed",
+          "when": "view == electron-manager && viewItem == electron-installed",
           "group": "inline"
         },
         {
           "command": "electron-fiddle.installElectron",
-          "when": "view =~ /^electron-version/ && viewItem == electron",
+          "when": "view == electron-manager && viewItem == electron",
           "group": "inline"
         }
       ]
