@@ -9,7 +9,9 @@ export class ElectronManagerTreeView {
     constructor(context: vscode.ExtensionContext) {
         this.provider = new ElectronManagerTreeDataProvider();
         const manager = Manager.getInstance();
-        manager.installer.on('state-change', () => this.provider.refresh());
+        manager.installer.on('state-changed', () => 
+            this.provider.refresh()
+        );
 
         this.treeView = vscode.window.createTreeView(
             'electron-manager',
@@ -35,6 +37,10 @@ export class ElectronManagerTreeView {
         channel.forEach(c => setChannelFilter(c, context.workspaceState.get(`electron-fiddle:is${c}ElectronVersion`, true)));
 
         context.subscriptions.push(this.treeView);
+    }
+
+    refresh() {
+        this.provider.refresh();
     }
 }
 
@@ -63,13 +69,15 @@ class ElectronManagerTreeDataProvider implements vscode.TreeDataProvider<Electro
     }
 }
 
-class ElectronManagerItem extends vscode.TreeItem {
+export class ElectronManagerItem extends vscode.TreeItem {
     constructor(
         public readonly version: string,
         public readonly downloaded: boolean = false,
+        public readonly active: boolean = false,
     ) {
         super(version);
-        this.contextValue = downloaded ? 'electron-installed' : 'electron';
+        this.description = active ? 'active' : '';
+        this.contextValue = active ? 'electron-installed-active' : downloaded ? 'electron-installed' : 'electron';
         this.iconPath = new vscode.ThemeIcon(
             downloaded ? 'package' : 'cloud-download',
             new vscode.ThemeColor(downloaded ? 'electronfiddle.electronInstalled' : 'electronfiddle.electronNotInstalled'),

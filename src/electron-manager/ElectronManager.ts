@@ -20,7 +20,7 @@ type FilterFunction = (has: boolean, data: ElectronVersionState) => boolean | un
 type FilterMap = { [K in ElectronVersionChannel]: FilterFunction };
 
 const filter: FilterMap = {
-    [ElectronVersionChannel.NotDownloaded]: (has, { downloaded }) => has !== downloaded,
+    [ElectronVersionChannel.NotDownloaded]: (has, { downloaded }) => has || downloaded,
     [ElectronVersionChannel.Stable]: (has, { semver: x }) => has && (x.prerelease.length === 0),
     [ElectronVersionChannel.Beta]: (has, { semver: x }) => has && (x.prerelease.includes('beta') || x.prerelease.includes('alpha')),
     [ElectronVersionChannel.Nightly]: (has, { semver: x }) => has && x.prerelease.includes('nightly'),
@@ -50,7 +50,7 @@ export class Manager {
         this.installer = new Installer();
         this.factory = new FiddleFactory();
         
-        this.installer.on('state-change', (version: string, state: InstallState) => {
+        this.installer.on('state-changed', ({ version, state }: {version: string, state: InstallState}) => {
             this.versionCache[version].state = state;
             this.versionCache[version].downloaded = isDownloaded(state);
         });

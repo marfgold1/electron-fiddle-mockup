@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ElectronManagerTreeView } from './electron-manager/ElectronManagerTreeView';
+import { ElectronManagerItem, ElectronManagerTreeView } from './electron-manager/ElectronManagerTreeView';
 import { Manager } from './electron-manager/ElectronManager';
 import path from 'path';
 
@@ -233,6 +233,15 @@ export function activate(context: vscode.ExtensionContext) {
 					title: 'Start a bisect session',
 				});
 			}
+		}),
+		vscode.commands.registerCommand('electron-fiddle.installElectron', async (node) => {
+			if (node instanceof ElectronManagerItem){
+				await manager.installer.ensureDownloaded(node.version);
+
+			}
+		}),
+		vscode.commands.registerCommand('electron-fiddle.uninstallElectron', async (node) => {
+			console.log(node);
 		}),
 	]);
 	let hw = vscode.commands.registerCommand('electron-fiddle.helloWorld', () => {

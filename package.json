@@ -278,6 +278,11 @@
           "command": "electron-fiddle.installElectron",
           "when": "view == electron-manager && viewItem == electron",
           "group": "inline"
+        },  
+        {
+          "command": "electron-fiddle.setActiveElectron",
+          "when": "view == electron-manager && viewItem == electron-installed",
+          "group": "inline"
         }
       ]
     }
